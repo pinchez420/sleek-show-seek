@@ -1,7 +1,10 @@
 import { Calendar, MapPin, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useFavorites } from "@/hooks/useFavorites";
+import { cn } from "@/lib/utils";
 
 interface EventCardProps {
+  id: string;
   image: string;
   title: string;
   date: string;
@@ -10,7 +13,10 @@ interface EventCardProps {
   category: string;
 }
 
-const EventCard = ({ image, title, date, venue, price, category }: EventCardProps) => {
+const EventCard = ({ id, image, title, date, venue, price, category }: EventCardProps) => {
+  const { toggleFavorite, isFavorite } = useFavorites();
+  const favorited = isFavorite(id);
+
   return (
     <div className="group relative rounded-xl overflow-hidden glass hover:shadow-2xl hover:shadow-primary/10 transition-all duration-500 hover:-translate-y-2">
       {/* Image */}
@@ -28,8 +34,19 @@ const EventCard = ({ image, title, date, venue, price, category }: EventCardProp
         </span>
 
         {/* Favorite Button */}
-        <button className="absolute top-3 right-3 p-2 rounded-full glass opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-primary/20">
-          <Heart className="h-4 w-4 text-foreground" />
+        <button 
+          onClick={() => toggleFavorite(id)}
+          className={cn(
+            "absolute top-3 right-3 p-2 rounded-full glass transition-all duration-300 hover:bg-primary/20",
+            favorited ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+          )}
+        >
+          <Heart 
+            className={cn(
+              "h-4 w-4 transition-colors",
+              favorited ? "text-primary fill-primary" : "text-foreground"
+            )} 
+          />
         </button>
       </div>
 

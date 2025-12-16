@@ -2,6 +2,7 @@ import EventCard from "./EventCard";
 
 const events = [
   {
+    id: "event-1",
     image: "https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=800&auto=format&fit=crop",
     title: "Electric Dreams Festival 2025",
     date: "Jan 15, 2025 • 7:00 PM",
@@ -10,6 +11,7 @@ const events = [
     category: "Festival",
   },
   {
+    id: "event-2",
     image: "https://images.unsplash.com/photo-1540039155733-5bb30b53aa14?w=800&auto=format&fit=crop",
     title: "Taylor Swift - The Eras Tour",
     date: "Feb 3, 2025 • 8:00 PM",
@@ -18,6 +20,7 @@ const events = [
     category: "Concert",
   },
   {
+    id: "event-3",
     image: "https://images.unsplash.com/photo-1459749411175-04bf5292ceea?w=800&auto=format&fit=crop",
     title: "Jazz Under the Stars",
     date: "Jan 22, 2025 • 9:00 PM",
@@ -26,6 +29,7 @@ const events = [
     category: "Jazz",
   },
   {
+    id: "event-4",
     image: "https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=800&auto=format&fit=crop",
     title: "NBA All-Star Weekend",
     date: "Feb 16, 2025 • 6:00 PM",
@@ -34,6 +38,7 @@ const events = [
     category: "Sports",
   },
   {
+    id: "event-5",
     image: "https://images.unsplash.com/photo-1507676184212-d03ab07a01bf?w=800&auto=format&fit=crop",
     title: "Hamilton - Broadway Show",
     date: "Jan 28, 2025 • 7:30 PM",
@@ -42,6 +47,7 @@ const events = [
     category: "Theatre",
   },
   {
+    id: "event-6",
     image: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=800&auto=format&fit=crop",
     title: "Techno Warehouse Party",
     date: "Jan 18, 2025 • 11:00 PM",
@@ -75,7 +81,7 @@ const EventsGrid = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {events.map((event, index) => (
             <div
-              key={event.title}
+              key={event.id}
               className="animate-fade-up"
               style={{ animationDelay: `${index * 0.1}s` }}
             >
