@@ -1,6 +1,5 @@
 import Header from "@/components/Header";
 import HeroSection from "@/components/HeroSection";
-import CategoryFilter from "@/components/CategoryFilter";
 import EventsGrid from "@/components/EventsGrid";
 import TrendingSection from "@/components/TrendingSection";
 import Footer from "@/components/Footer";
@@ -11,7 +10,7 @@ const Index = () => {
       <Header />
       <main>
         <HeroSection />
-        <CategoryFilter />
+        {/* We removed <CategoryFilter /> here because it is now inside EventsGrid */}
         <EventsGrid />
         <TrendingSection />
       </main>
