@@ -2,6 +2,7 @@ import { Calendar, MapPin, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useFavorites } from "@/hooks/useFavorites";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner"; // Added import
 
 interface EventCardProps {
   id: string;
@@ -16,6 +17,14 @@ interface EventCardProps {
 const EventCard = ({ id, image, title, date, venue, price, category }: EventCardProps) => {
   const { toggleFavorite, isFavorite } = useFavorites();
   const favorited = isFavorite(id);
+
+  // New logic for the Buy button
+  const handleBuy = () => {
+    toast.success(`Tickets for ${title} added to cart!`, {
+      description: "Proceed to checkout to complete your order.",
+      duration: 3000,
+    });
+  };
 
   return (
     <div className="group relative rounded-xl overflow-hidden glass hover:shadow-2xl hover:shadow-primary/10 transition-all duration-500 hover:-translate-y-2">
@@ -72,7 +81,7 @@ const EventCard = ({ id, image, title, date, venue, price, category }: EventCard
             <span className="text-xs text-muted-foreground">From</span>
             <p className="text-xl font-bold gradient-text">{price}</p>
           </div>
-          <Button variant="hero" size="sm">
+          <Button variant="hero" size="sm" onClick={handleBuy}>
             Get Tickets
           </Button>
         </div>
