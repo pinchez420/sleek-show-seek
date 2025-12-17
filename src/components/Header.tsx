@@ -28,20 +28,7 @@ const Header = () => {
           <span className="text-xl font-bold gradient-text">TicketPulse</span>
         </div>
 
-        <nav className="hidden md:flex items-center gap-8">
-          <a href="#" className="text-foreground/80 hover:text-primary transition-colors font-medium">
-            Events
-          </a>
-          <a href="#" className="text-foreground/80 hover:text-primary transition-colors font-medium">
-            Concerts
-          </a>
-          <a href="#" className="text-foreground/80 hover:text-primary transition-colors font-medium">
-            Sports
-          </a>
-          <a href="#" className="text-foreground/80 hover:text-primary transition-colors font-medium">
-            Theatre
-          </a>
-        </nav>
+        {/* Top navigation removed to avoid duplication with middle section filters */}
 
         <div className="hidden lg:flex items-center gap-3 flex-1 max-w-md mx-8">
           <div className="relative w-full">
