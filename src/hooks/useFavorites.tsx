@@ -34,6 +34,8 @@ export const useFavorites = () => {
     setLoading(false);
   };
 
+
+
   const toggleFavorite = async (eventId: string) => {
     if (!user) {
       toast({

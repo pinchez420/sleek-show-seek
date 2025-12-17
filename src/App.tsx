@@ -1,4 +1,5 @@
 
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -10,6 +11,7 @@ import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import Checkout from "./pages/Checkout";
 import MyOrders from "./pages/MyOrders";
+import MyTickets from "./pages/MyTickets";
 import OrderConfirmation from "./pages/OrderConfirmation";
 
 const queryClient = new QueryClient();
@@ -22,11 +24,13 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
 
+
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/checkout" element={<Checkout />} />
             <Route path="/orders" element={<MyOrders />} />
+            <Route path="/tickets" element={<MyTickets />} />
             <Route path="/favorites" element={<Index />} />
             <Route path="/order-confirmation" element={<OrderConfirmation />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

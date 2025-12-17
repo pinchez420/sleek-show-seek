@@ -1,5 +1,6 @@
 
-import { Search, Menu, User, Ticket, LogOut, Heart, X } from "lucide-react";
+
+import { Search, Menu, User, Ticket, LogOut, Heart, X, ShoppingBag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/useAuth";
@@ -81,13 +82,19 @@ const Header = () => {
                     </div>
                     <DropdownMenuSeparator />
 
+
                     <DropdownMenuItem onClick={() => handleMobileNavigation('/favorites')}>
                       <Heart className="h-4 w-4 mr-2" />
                       My Favorites
                     </DropdownMenuItem>
+
                     <DropdownMenuItem onClick={() => handleMobileNavigation('/orders')}>
-                      <Ticket className="h-4 w-4 mr-2" />
+                      <ShoppingBag className="h-4 w-4 mr-2" />
                       My Orders
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleMobileNavigation('/tickets')}>
+                      <Ticket className="h-4 w-4 mr-2" />
+                      My Tickets
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={handleSignOut}>
@@ -135,13 +142,23 @@ const Header = () => {
                       <Heart className="h-5 w-5 mr-3" />
                       My Favorites
                     </Button>
+
+
                     <Button 
                       variant="ghost" 
                       className="justify-start h-12 text-lg"
                       onClick={() => handleMobileNavigation('/orders')}
                     >
-                      <Ticket className="h-5 w-5 mr-3" />
+                      <ShoppingBag className="h-5 w-5 mr-3" />
                       My Orders
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      className="justify-start h-12 text-lg"
+                      onClick={() => handleMobileNavigation('/tickets')}
+                    >
+                      <Ticket className="h-5 w-5 mr-3" />
+                      My Tickets
                     </Button>
                     <Button 
                       variant="ghost" 

@@ -1,4 +1,3 @@
-
 import { Calendar, MapPin, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useFavorites } from "@/hooks/useFavorites";
@@ -17,7 +16,7 @@ interface EventCardProps {
   category: string;
 }
 
-const EventCard = ({ id, image, title, date, venue, price, category }: EventCardProps) => {
+const EventCardFixed = ({ id, image, title, date, venue, price, category }: EventCardProps) => {
   const { user } = useAuth();
   const { toggleFavorite, isFavorite } = useFavorites();
   const { toast } = useToast();
@@ -126,4 +125,4 @@ const EventCard = ({ id, image, title, date, venue, price, category }: EventCard
   );
 };
 
-export default EventCard;
+export default EventCardFixed;

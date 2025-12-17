@@ -1,4 +1,3 @@
-
 import { Calendar, MapPin, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useFavorites } from "@/hooks/useFavorites";
@@ -6,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { useState } from "react";
 
 interface EventCardProps {
   id: string;
@@ -17,25 +17,29 @@ interface EventCardProps {
   category: string;
 }
 
-const EventCard = ({ id, image, title, date, venue, price, category }: EventCardProps) => {
+const EventCardRobust = ({ id, image, title, date, venue, price, category }: EventCardProps) => {
   const { user } = useAuth();
   const { toggleFavorite, isFavorite } = useFavorites();
   const { toast } = useToast();
-  const favorited = isFavorite(id);
   const navigate = useNavigate();
+  const [isToggling, setIsToggling] = useState(false);
+  
+  const favorited = isFavorite(id);
 
   const handleBuy = () => {
     const params = new URLSearchParams({ eventId: id, qty: "1" });
     navigate(`/checkout?${params.toString()}`);
   };
 
-  const handleToggleFavorite = async (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    console.log('Favorite button clicked:', { eventId: id, user: !!user });
+  const handleToggleFavorite = async () => {
+    console.log('=== FAVORITES DEBUG START ===');
+    console.log('Event ID:', id);
+    console.log('User authenticated:', !!user);
+    console.log('Currently favorited:', favorited);
+    console.log('Toggle function:', typeof toggleFavorite);
     
     if (!user) {
+      console.log('No user - showing sign in toast');
       toast({
         title: "Sign in required",
         description: "Please sign in to save favorite events",
@@ -44,18 +48,32 @@ const EventCard = ({ id, image, title, date, venue, price, category }: EventCard
       return;
     }
 
+    if (isToggling) {
+      console.log('Already toggling - ignoring click');
+      return;
+    }
+
+    setIsToggling(true);
+    
     try {
+      console.log('Calling toggleFavorite...');
       await toggleFavorite(id);
-      console.log('Favorite toggle completed for:', id);
+      console.log('Toggle completed successfully');
     } catch (error) {
-      console.error('Error toggling favorite:', error);
+      console.error('Toggle failed:', error);
       toast({
         title: "Error",
         description: "Failed to update favorites. Please try again.",
         variant: "destructive"
       });
+    } finally {
+      setIsToggling(false);
+      console.log('=== FAVORITES DEBUG END ===');
     }
   };
+
+  // Always show the button on mobile for better UX
+  const showFavoriteButton = true;
 
   return (
     <div className="group relative rounded-xl overflow-hidden glass hover:shadow-2xl hover:shadow-primary/10 transition-all duration-500 hover:-translate-y-2">
@@ -73,23 +91,34 @@ const EventCard = ({ id, image, title, date, venue, price, category }: EventCard
           {category}
         </span>
 
-        {/* Favorite Button */}
+        {/* Favorite Button - Enhanced Implementation */}
         <button 
           type="button"
-          onClick={handleToggleFavorite}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('Button clicked directly');
+            handleToggleFavorite();
+          }}
+          disabled={isToggling}
           className={cn(
-            "absolute top-3 right-3 p-2 rounded-full glass transition-all duration-300 hover:bg-primary/20 z-20",
+            "absolute top-3 right-3 p-2 rounded-full transition-all duration-300 z-50",
             "focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2",
-            favorited ? "opacity-100" : "opacity-70 group-hover:opacity-100"
+            "hover:scale-110 active:scale-95",
+            favorited 
+              ? "bg-primary/90 text-primary-foreground hover:bg-primary" 
+              : "bg-black/30 text-white hover:bg-primary/70",
+            showFavoriteButton ? "opacity-100" : "opacity-0 group-hover:opacity-100",
+            isToggling && "opacity-50 cursor-not-allowed"
           )}
           aria-label={favorited ? "Remove from favorites" : "Add to favorites"}
+          title={favorited ? "Remove from favorites" : "Add to favorites"}
         >
           <Heart 
             className={cn(
               "h-4 w-4 transition-all duration-200",
-              favorited 
-                ? "text-primary fill-primary scale-110" 
-                : "text-white hover:text-primary"
+              favorited && "fill-current",
+              isToggling && "animate-pulse"
             )} 
           />
         </button>
@@ -126,4 +155,4 @@ const EventCard = ({ id, image, title, date, venue, price, category }: EventCard
   );
 };
 
-export default EventCard;
+export default EventCardRobust;

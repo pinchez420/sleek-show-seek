@@ -12,12 +12,20 @@ interface MPesaPaymentProps {
   orderId: string;
   amount: number;
   currency: string;
-  onPaymentSuccess: (paymentData: any) => void;
+  onPaymentSuccess: (paymentData: MPesaPaymentResult) => void;
   onPaymentError: (error: string) => void;
   eventTitle: string;
 }
 
 interface MPesaPaymentData {
+  phone: string;
+  email: string;
+}
+
+interface MPesaPaymentResult {
+  paymentMethod: string;
+  amount: number;
+  currency: string;
   phone: string;
   email: string;
 }
@@ -37,7 +45,7 @@ export const MPesaPayment: React.FC<MPesaPaymentProps> = ({
   const [isProcessing, setIsProcessing] = useState(false);
   const [step, setStep] = useState<'form' | 'processing' | 'confirm'>('form');
 
-  const formatPhoneNumber = (phone: string) => {
+  const formatPhoneNumber = (phone: string): string => {
     // Remove all non-digit characters
     const cleaned = phone.replace(/\D/g, '');
     
@@ -53,7 +61,7 @@ export const MPesaPayment: React.FC<MPesaPaymentProps> = ({
     return cleaned;
   };
 
-  const validatePhoneNumber = (phone: string) => {
+  const validatePhoneNumber = (phone: string): boolean => {
     const cleaned = phone.replace(/\D/g, '');
     return cleaned.length >= 10 && cleaned.length <= 13;
   };
@@ -335,7 +343,7 @@ export const MPesaPayment: React.FC<MPesaPaymentProps> = ({
 };
 
 // Utility function to format currency
-const formatCurrency = (amount: number, currency: string = 'KES') => {
+const formatCurrency = (amount: number, currency: string = 'KES'): string => {
   return new Intl.NumberFormat('en-KE', {
     style: 'currency',
     currency: currency,

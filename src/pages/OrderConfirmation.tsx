@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
@@ -7,7 +8,12 @@ import { Badge } from '@/components/ui/badge';
 import { Loader2, Download, Mail, Home, Calendar, MapPin, CreditCard, CheckCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { stripeService, formatPrice } from '@/integrations/stripe';
+import { TicketService, TicketWithEvent } from '@/services/ticketService';
+import TicketCard from '@/components/TicketCard';
 import { toast } from 'sonner';
+
+
+
 
 interface OrderDetails {
   id: string;
@@ -19,26 +25,16 @@ interface OrderDetails {
   status: string;
   payment_method: string;
   created_at: string;
-  events: {
+  events?: {
     title: string;
     date: string;
     venue: string;
     image: string;
     price: string;
     category: string;
-  };
-  receipts: {
-    id: string;
-    receipt_number: string;
-    html_content: string;
-    pdf_url?: string;
-  }[];
-  payments: {
-    id: string;
-    status: string;
-    payment_method_type: string;
-    created_at: string;
-  }[];
+  } | null;
+  receipts?: any[];
+  payments?: any[];
 }
 
 const OrderConfirmation = () => {
@@ -46,10 +42,13 @@ const OrderConfirmation = () => {
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
   
+
   const orderId = searchParams.get('orderId');
   const [orderDetails, setOrderDetails] = useState<OrderDetails | null>(null);
+  const [tickets, setTickets] = useState<TicketWithEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [sendingReceipt, setSendingReceipt] = useState(false);
+  const [ticketsGenerated, setTicketsGenerated] = useState(false);
 
   useEffect(() => {
     if (!orderId || !user) {
@@ -60,18 +59,49 @@ const OrderConfirmation = () => {
     fetchOrderDetails();
   }, [orderId, user, navigate]);
 
+
   const fetchOrderDetails = async () => {
     if (!orderId) return;
 
     try {
       const data = await stripeService.getOrderDetails(orderId, user!.id);
       setOrderDetails(data);
+      
+      // Generate tickets if order is paid and tickets not yet generated
+      if (data.status === 'paid' && !ticketsGenerated) {
+        await generateTickets(data);
+      }
     } catch (error) {
       console.error('Error fetching order details:', error);
       toast.error('Failed to load order details');
       navigate('/');
     } finally {
       setLoading(false);
+    }
+  };
+
+
+  const generateTickets = async (orderData: OrderDetails) => {
+    try {
+      if (!orderData.events) {
+        toast.error('Event details not available');
+        return;
+      }
+      
+      const generatedTickets = await TicketService.createTickets({
+        orderId: orderData.id,
+        eventId: orderData.event_id,
+        eventName: orderData.events.title,
+        userId: orderData.user_id,
+        quantity: orderData.quantity
+      });
+      
+      setTickets(generatedTickets);
+      setTicketsGenerated(true);
+      toast.success(`${generatedTickets.length} ticket(s) generated successfully!`);
+    } catch (error) {
+      console.error('Error generating tickets:', error);
+      toast.error('Failed to generate tickets');
     }
   };
 
@@ -274,6 +304,40 @@ const OrderConfirmation = () => {
                       <Mail className="h-4 w-4 mr-2" />
                     )}
                     Email Receipt
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+
+        {/* Tickets Section */}
+        {tickets.length > 0 && (
+          <Card className="mt-6">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <CheckCircle className="h-5 w-5" />
+                Your Tickets
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <p className="text-sm text-muted-foreground">
+                  {tickets.length} ticket{tickets.length > 1 ? 's' : ''} generated for your event
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {tickets.map((ticket) => (
+                    <TicketCard key={ticket.id} ticket={ticket} compact />
+                  ))}
+                </div>
+                <div className="flex gap-3 pt-4 border-t">
+                  <Button 
+                    onClick={() => navigate('/tickets')}
+                    variant="default"
+                    className="flex-1"
+                  >
+                    View All My Tickets
                   </Button>
                 </div>
               </div>

@@ -277,6 +277,7 @@ export type Database = {
         }
         Relationships: []
       }
+
       profiles: {
         Row: {
           avatar_url: string | null
@@ -301,6 +302,48 @@ export type Database = {
           email?: string | null
           id?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      tickets: {
+        Row: {
+          id: string
+          ticket_number: string
+          qr_code_data: string
+          event_id: string
+          event_name: string
+          user_id: string
+          order_id: string
+          status: string
+          created_at: string
+          used_at: string | null
+          used_by: string | null
+        }
+        Insert: {
+          id?: string
+          ticket_number: string
+          qr_code_data: string
+          event_id: string
+          event_name: string
+          user_id: string
+          order_id: string
+          status?: string
+          created_at?: string
+          used_at?: string | null
+          used_by?: string | null
+        }
+        Update: {
+          id?: string
+          ticket_number?: string
+          qr_code_data?: string
+          event_id?: string
+          event_name?: string
+          user_id?: string
+          order_id?: string
+          status?: string
+          created_at?: string
+          used_at?: string | null
+          used_by?: string | null
         }
         Relationships: []
       }
