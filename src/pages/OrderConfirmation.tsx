@@ -288,8 +288,9 @@ const OrderConfirmation = () => {
             Back to Home
           </Button>
           
+
           <Button 
-            onClick={() => navigate('/my-orders')}
+            onClick={() => navigate('/orders')}
             variant="default"
           >
             <CreditCard className="h-4 w-4 mr-2" />

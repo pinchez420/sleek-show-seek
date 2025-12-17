@@ -80,9 +80,14 @@ const Header = () => {
                       <p className="text-sm font-medium truncate">{user.email}</p>
                     </div>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem>
+
+                    <DropdownMenuItem onClick={() => handleMobileNavigation('/favorites')}>
                       <Heart className="h-4 w-4 mr-2" />
                       My Favorites
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleMobileNavigation('/orders')}>
+                      <Ticket className="h-4 w-4 mr-2" />
+                      My Orders
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={handleSignOut}>
@@ -91,6 +96,7 @@ const Header = () => {
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
+
               ) : (
                 <Button variant="ghost" size="icon" onClick={() => navigate('/auth')}>
                   <User className="h-5 w-5" />
@@ -98,11 +104,6 @@ const Header = () => {
               )}
             </>
           )}
-          
-
-          <Button variant="hero" size="sm" className="hidden sm:flex">
-            Sell Tickets
-          </Button>
           
           <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
             <SheetTrigger asChild>
@@ -160,16 +161,8 @@ const Header = () => {
                     <User className="h-5 w-5 mr-3" />
                     Sign In
                   </Button>
+
                 )}
-                
-                <Button 
-                  variant="outline" 
-                  className="justify-start h-12 text-lg"
-                  onClick={() => handleMobileNavigation('/sell')}
-                >
-                  <Ticket className="h-5 w-5 mr-3" />
-                  Sell Tickets
-                </Button>
               </div>
             </SheetContent>
           </Sheet>
