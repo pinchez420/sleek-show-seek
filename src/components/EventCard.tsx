@@ -2,11 +2,7 @@ import { Calendar, MapPin, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useFavorites } from "@/hooks/useFavorites";
 import { cn } from "@/lib/utils";
-<<<<<<< HEAD
-import { toast } from "sonner"; // Added import
-=======
 import { useNavigate } from "react-router-dom";
->>>>>>> 25a3ba5 (Update frontend and Supabase integration)
 
 interface EventCardProps {
   id: string;
@@ -26,14 +22,6 @@ const EventCard = ({ id, image, title, date, venue, price, category }: EventCard
   const handleBuy = () => {
     const params = new URLSearchParams({ eventId: id, qty: "1" });
     navigate(`/checkout?${params.toString()}`);
-  };
-
-  // New logic for the Buy button
-  const handleBuy = () => {
-    toast.success(`Tickets for ${title} added to cart!`, {
-      description: "Proceed to checkout to complete your order.",
-      duration: 3000,
-    });
   };
 
   return (
