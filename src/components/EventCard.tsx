@@ -40,13 +40,19 @@ const EventCard = ({ id, image, title, date, venue, price, category }: EventCard
           {category}
         </span>
 
+
         {/* Favorite Button */}
         <button 
-          onClick={() => toggleFavorite(id)}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            toggleFavorite(id);
+          }}
           className={cn(
-            "absolute top-3 right-3 p-2 rounded-full glass transition-all duration-300 hover:bg-primary/20",
+            "absolute top-3 right-3 p-2 rounded-full glass transition-all duration-300 hover:bg-primary/20 z-10",
             favorited ? "opacity-100" : "opacity-0 group-hover:opacity-100"
           )}
+          aria-label={favorited ? "Remove from favorites" : "Add to favorites"}
         >
           <Heart 
             className={cn(

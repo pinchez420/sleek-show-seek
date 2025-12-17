@@ -1,4 +1,5 @@
-import { Search, Menu, User, Ticket, LogOut, Heart } from "lucide-react";
+
+import { Search, Menu, User, Ticket, LogOut, Heart, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/useAuth";
@@ -10,14 +11,23 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { useState } from "react";
+
 
 const Header = () => {
   const { user, signOut, loading } = useAuth();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleSignOut = async () => {
     await signOut();
+  };
+
+  const handleMobileNavigation = (path: string) => {
+    navigate(path);
+    setMobileMenuOpen(false);
   };
 
   return (
@@ -89,12 +99,80 @@ const Header = () => {
             </>
           )}
           
+
           <Button variant="hero" size="sm" className="hidden sm:flex">
             Sell Tickets
           </Button>
-          <Button variant="ghost" size="icon" className="md:hidden">
-            <Menu className="h-5 w-5" />
-          </Button>
+          
+          <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="icon" className="md:hidden">
+                <Menu className="h-5 w-5" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right" className="w-[300px] sm:w-[400px]">
+              <SheetHeader>
+                <SheetTitle>Menu</SheetTitle>
+              </SheetHeader>
+              <div className="flex flex-col gap-4 mt-8">
+                <Button 
+                  variant="ghost" 
+                  className="justify-start h-12 text-lg"
+                  onClick={() => handleMobileNavigation('/')}
+                >
+                  <Ticket className="h-5 w-5 mr-3" />
+                  Home
+                </Button>
+                
+                {user ? (
+                  <>
+                    <Button 
+                      variant="ghost" 
+                      className="justify-start h-12 text-lg"
+                      onClick={() => handleMobileNavigation('/favorites')}
+                    >
+                      <Heart className="h-5 w-5 mr-3" />
+                      My Favorites
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      className="justify-start h-12 text-lg"
+                      onClick={() => handleMobileNavigation('/orders')}
+                    >
+                      <Ticket className="h-5 w-5 mr-3" />
+                      My Orders
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      className="justify-start h-12 text-lg text-red-600 hover:text-red-700 hover:bg-red-50"
+                      onClick={handleSignOut}
+                    >
+                      <LogOut className="h-5 w-5 mr-3" />
+                      Sign Out
+                    </Button>
+                  </>
+                ) : (
+                  <Button 
+                    variant="hero" 
+                    className="justify-start h-12 text-lg"
+                    onClick={() => handleMobileNavigation('/auth')}
+                  >
+                    <User className="h-5 w-5 mr-3" />
+                    Sign In
+                  </Button>
+                )}
+                
+                <Button 
+                  variant="outline" 
+                  className="justify-start h-12 text-lg"
+                  onClick={() => handleMobileNavigation('/sell')}
+                >
+                  <Ticket className="h-5 w-5 mr-3" />
+                  Sell Tickets
+                </Button>
+              </div>
+            </SheetContent>
+          </Sheet>
         </div>
       </div>
     </header>
