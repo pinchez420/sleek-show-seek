@@ -1,8 +1,5 @@
 import { useEffect, useState } from "react";
-<<<<<<< HEAD
-=======
 import { useSearchParams } from "react-router-dom";
->>>>>>> 25a3ba5 (Update frontend and Supabase integration)
 import EventCard from "./EventCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,10 +28,7 @@ const categories = [
 ];
 
 const EventsGrid = () => {
-<<<<<<< HEAD
-=======
   const [searchParams, setSearchParams] = useSearchParams();
->>>>>>> 25a3ba5 (Update frontend and Supabase integration)
   const [activeCategory, setActiveCategory] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [events, setEvents] = useState<Event[]>([]);
@@ -61,16 +55,12 @@ const EventsGrid = () => {
       }
     };
 
-<<<<<<< HEAD
-    fetchEvents();
-  }, []);
-
-=======
     // initialize search from URL
     const initial = searchParams.get('q') ?? '';
     if (initial) setSearchQuery(initial);
 
     fetchEvents();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Keep URL in sync when searchQuery changes locally
@@ -90,7 +80,6 @@ const EventsGrid = () => {
     setSearchQuery(q);
   }, [searchParams]);
 
->>>>>>> 25a3ba5 (Update frontend and Supabase integration)
   // 2. Filter Logic
   const filteredEvents = events.filter((event) => {
     const matchesCategory = activeCategory === "All" || event.category === activeCategory;
