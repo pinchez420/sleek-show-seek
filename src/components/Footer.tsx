@@ -1,8 +1,21 @@
 import { Ticket, Mail, Instagram, Twitter, Facebook, Youtube } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useState } from "react";
+import { toast } from "sonner";
 
 const Footer = () => {
+  const [email, setEmail] = useState("");
+
+  const handleSubscribe = () => {
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      toast.error("Enter a valid email to subscribe");
+      return;
+    }
+    toast.success("Subscribed!", { description: "You'll receive the latest events and offers." });
+    setEmail("");
+  };
+
   return (
     <footer className="bg-secondary/30 border-t border-border">
       <div className="container mx-auto px-4 py-16">
@@ -87,9 +100,14 @@ const Footer = () => {
                 <Input
                   placeholder="Enter your email"
                   className="pl-10 bg-secondary/50 border-border/50"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleSubscribe();
+                  }}
                 />
               </div>
-              <Button variant="hero">Subscribe</Button>
+              <Button variant="hero" onClick={handleSubscribe}>Subscribe</Button>
             </div>
           </div>
         </div>

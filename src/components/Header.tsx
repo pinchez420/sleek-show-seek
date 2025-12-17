@@ -2,7 +2,7 @@ import { Search, Menu, User, Ticket, LogOut, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/useAuth";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,6 +14,7 @@ import {
 const Header = () => {
   const { user, signOut, loading } = useAuth();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const handleSignOut = async () => {
     await signOut();
@@ -48,6 +49,16 @@ const Header = () => {
             <Input
               placeholder="Search events, artists, venues..."
               className="pl-10 bg-secondary/50 border-border/50 focus:border-primary"
+              defaultValue={searchParams.get('q') ?? ''}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  const value = (e.target as HTMLInputElement).value;
+                  const next = new URLSearchParams(searchParams);
+                  if (value) next.set('q', value); else next.delete('q');
+                  setSearchParams(next, { replace: false });
+                  navigate(`/?${next.toString()}`);
+                }
+              }}
             />
           </div>
         </div>
