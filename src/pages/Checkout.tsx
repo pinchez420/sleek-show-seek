@@ -1,10 +1,18 @@
+
+
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { Loader2, ArrowLeft, Ticket, Plus, Minus, ShieldCheck, Lock } from "lucide-react";
+import { Loader2, ArrowLeft, Ticket, Plus, Minus, ShieldCheck, Lock, CreditCard } from "lucide-react";
 import { toast } from "sonner";
+import { Elements } from "@stripe/react-stripe-js";
+import { loadStripe } from "@stripe/stripe-js";
+import PaymentMethodSelector, { PaymentMethod } from "@/components/PaymentMethodSelector";
+import { stripeService, formatPriceToCents, formatPrice } from "@/integrations/stripe";
+import StripePaymentForm from "@/components/StripePaymentForm";
+import MPesaPayment from "@/components/MPesaPayment";
 
 interface EventRow {
   id: string;
@@ -21,6 +29,9 @@ const parsePrice = (price: string) => {
   return Number.isFinite(amount) ? amount : 0;
 };
 
+// Initialize Stripe
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || 'pk_test_your_key_here');
+
 const Checkout = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -32,6 +43,10 @@ const Checkout = () => {
   const [qty, setQty] = useState<number>(initialQty);
   const [event, setEvent] = useState<EventRow | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentMethod>('card');
+  const [orderId, setOrderId] = useState<string>('');
+  const [clientSecret, setClientSecret] = useState<string>('');
+  const [paymentLoading, setPaymentLoading] = useState<boolean>(false);
 
   useEffect(() => {
     if (!eventId) {
@@ -69,40 +84,136 @@ const Checkout = () => {
   const increment = () => setQty((q) => Math.min(10, q + 1));
   const decrement = () => setQty((q) => Math.max(1, q - 1));
 
-  const handlePay = async () => {
-    if (!user) {
+  // Create order and payment intent
+  const createOrderAndPayment = async () => {
+    if (!user || !event) {
       toast.error("Please sign in to continue");
       navigate("/auth");
       return;
     }
 
-    // Simulate payment success
-    toast.success("Order confirmed!", {
-      description: `You purchased ${qty} ticket${qty > 1 ? "s" : ""} for ${event?.title}.`,
-      duration: 3000,
-    });
+    setPaymentLoading(true);
 
-    // Persist order
     try {
-      const { error } = await supabase.from("orders").insert({
-        user_id: user.id,
-        event_id: event?.id,
-        quantity: qty,
-        amount_cents: Math.round(total * 100),
-        status: "paid",
-      });
-      if (error) console.error("Order insert failed:", error);
-    } catch (e) {
-      console.error(e);
-    }
+      // Create order first
+      const { data: order, error: orderError } = await supabase
+        .from("orders")
+        .insert({
+          user_id: user.id,
+          event_id: event.id,
+          quantity: qty,
+          amount_cents: formatPriceToCents(total),
+          currency: 'USD',
+          status: 'pending',
 
-    navigate("/");
+          payment_method: selectedPaymentMethod as 'card' | 'apple_pay' | 'google_pay' | 'paypal' | 'mpesa',
+        })
+        .select()
+        .single();
+
+      if (orderError) {
+        throw new Error(`Failed to create order: ${orderError.message}`);
+      }
+
+      setOrderId(order.id);
+
+      // Create payment intent with Stripe
+      const paymentIntent = await stripeService.createPaymentIntent({
+        orderId: order.id,
+        amount: formatPriceToCents(total),
+        currency: 'USD',
+        eventId: event.id,
+        eventTitle: event.title,
+        userEmail: user.email || '',
+        userName: user.user_metadata?.display_name || user.email || '',
+        paymentMethod: selectedPaymentMethod,
+      });
+
+      setClientSecret(paymentIntent.client_secret);
+
+      toast.success("Order created! Please complete your payment.");
+    } catch (error) {
+      console.error('Error creating order and payment:', error);
+      toast.error("Failed to initialize payment", {
+        description: error instanceof Error ? error.message : 'Please try again'
+      });
+    } finally {
+      setPaymentLoading(false);
+    }
+  };
+
+  // Handle payment success
+  const handlePaymentSuccess = async (paymentIntentId: string) => {
+    try {
+      // Update order status
+      await stripeService.updateOrderStatus(orderId, 'paid', paymentIntentId);
+      
+      // Create payment record
+      const paymentIntent = await stripeService.createPaymentRecord(orderId, {
+        id: paymentIntentId,
+        amount: formatPriceToCents(total),
+        currency: 'USD',
+        status: 'succeeded',
+        payment_method_types: [selectedPaymentMethod],
+      });
+
+      // Generate receipt
+      await stripeService.generateReceipt(orderId);
+
+      toast.success("Payment successful!", {
+        description: `You purchased ${qty} ticket${qty > 1 ? "s" : ""} for ${event?.title}.`,
+        duration: 5000,
+      });
+
+      // Navigate to order confirmation or home
+      navigate(`/order-confirmation?orderId=${orderId}`);
+    } catch (error) {
+      console.error('Error processing payment success:', error);
+      toast.error("Payment processing error", {
+        description: "Please check your order status in your account"
+      });
+    }
+  };
+
+
+  // Handle payment error
+  const handlePaymentError = (error: string) => {
+    toast.error("Payment failed", {
+      description: error
+    });
+    
+    // Update order status to failed if needed
+    if (orderId) {
+      stripeService.updateOrderStatus(orderId, 'failed').catch(console.error);
+    }
+  };
+
+  // Handle M-Pesa payment success
+  const handleMPesaPaymentSuccess = async (paymentData: any) => {
+    try {
+      // Generate receipt
+      await stripeService.generateReceipt(orderId);
+
+      toast.success("Payment successful!", {
+        description: `You purchased ${qty} ticket${qty > 1 ? "s" : ""} for ${event?.title} via M-Pesa.`,
+        duration: 5000,
+      });
+
+      // Navigate to order confirmation
+      navigate(`/order-confirmation?orderId=${orderId}`);
+    } catch (error) {
+      console.error('Error processing M-Pesa payment success:', error);
+      toast.error("Payment processing error", {
+        description: "Please check your order status in your account"
+      });
+    }
   };
 
   return (
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-40 glass border-b border-border">
         <div className="container mx-auto px-4 py-4 flex items-center gap-3">
+
           <Button variant="ghost" onClick={() => navigate(-1)}>
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back
@@ -160,50 +271,114 @@ const Checkout = () => {
               </div>
             </div>
 
-            {/* Order Summary */}
-            <aside className="glass rounded-xl p-6 h-fit">
-              <h2 className="text-lg font-semibold mb-4">Order Summary</h2>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span>Tickets x{qty}</span>
-                  <span>${unitPrice.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Fees</span>
-                  <span>$0.00</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Tax</span>
-                  <span>$0.00</span>
-                </div>
-                <div className="border-t border-border my-2" />
-                <div className="flex justify-between font-semibold">
-                  <span>Total</span>
-                  <span>${total.toFixed(2)}</span>
+            {/* Payment Section */}
+            <aside className="space-y-6">
+              {/* Order Summary */}
+              <div className="glass rounded-xl p-6 h-fit">
+                <h2 className="text-lg font-semibold mb-4">Order Summary</h2>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span>Tickets x{qty}</span>
+                    <span>${unitPrice.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Fees</span>
+                    <span>$0.00</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Tax</span>
+                    <span>$0.00</span>
+                  </div>
+                  <div className="border-t border-border my-2" />
+                  <div className="flex justify-between font-semibold">
+                    <span>Total</span>
+                    <span>${total.toFixed(2)}</span>
+                  </div>
                 </div>
               </div>
 
-              {authLoading ? (
-                <div className="mt-6 flex justify-center">
-                  <Loader2 className="h-5 w-5 animate-spin text-primary" />
-                </div>
-              ) : user ? (
-                <Button className="w-full mt-6" variant="hero" onClick={handlePay}>
-                  Pay now
-                </Button>
-              ) : (
-                <div className="mt-6 space-y-3">
-                  <div className="flex items-center gap-2 text-muted-foreground text-sm">
-                    <Lock className="h-4 w-4" />
-                    <span>Sign in is required to complete your purchase.</span>
+              {/* Payment Methods */}
+              <div className="glass rounded-xl p-6">
+                {authLoading ? (
+                  <div className="flex justify-center py-4">
+                    <Loader2 className="h-5 w-5 animate-spin text-primary" />
                   </div>
-                  <Button className="w-full" variant="hero" onClick={() => navigate("/auth")}>Sign in to continue</Button>
-                </div>
-              )}
+                ) : user ? (
+                  <>
 
-              <div className="mt-6 flex items-center gap-2 text-muted-foreground text-xs">
-                <ShieldCheck className="h-4 w-4" />
-                <span>Secure checkout. Your payment information is encrypted.</span>
+                    {clientSecret && stripePromise && selectedPaymentMethod !== 'mpesa' ? (
+                      <Elements 
+                        stripe={stripePromise} 
+                        options={{
+                          clientSecret,
+                          appearance: {
+                            theme: 'stripe',
+                            variables: {
+                              colorPrimary: 'hsl(var(--primary))',
+                            },
+                          },
+                        }}
+                      >
+                        <StripePaymentForm
+                          clientSecret={clientSecret}
+                          onSuccess={handlePaymentSuccess}
+                          onError={handlePaymentError}
+                          paymentMethod={selectedPaymentMethod}
+                        />
+                      </Elements>
+                    ) : selectedPaymentMethod === 'mpesa' && orderId ? (
+                      <MPesaPayment
+                        orderId={orderId}
+                        amount={formatPriceToCents(total)}
+                        currency="USD"
+                        eventTitle={event.title}
+                        onPaymentSuccess={handleMPesaPaymentSuccess}
+                        onPaymentError={handlePaymentError}
+                      />
+                    ) : (
+                      <>
+                        <PaymentMethodSelector
+                          selectedMethod={selectedPaymentMethod}
+                          onMethodSelect={setSelectedPaymentMethod}
+                          disabled={paymentLoading}
+                        />
+                        <Button 
+                          className="w-full mt-6" 
+                          variant="hero" 
+                          onClick={createOrderAndPayment}
+                          disabled={paymentLoading}
+                        >
+                          {paymentLoading ? (
+                            <>
+                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                              Processing...
+                            </>
+                          ) : (
+                            <>
+                              <CreditCard className="h-4 w-4 mr-2" />
+                              Continue to Payment
+                            </>
+                          )}
+                        </Button>
+                      </>
+                    )}
+                  </>
+                ) : (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2 text-muted-foreground text-sm">
+                      <Lock className="h-4 w-4" />
+                      <span>Sign in is required to complete your purchase.</span>
+                    </div>
+                    <Button className="w-full" variant="hero" onClick={() => navigate("/auth")}>
+                      Sign in to continue
+                    </Button>
+                  </div>
+                )}
+
+                <div className="mt-6 flex items-center gap-2 text-muted-foreground text-xs">
+                  <ShieldCheck className="h-4 w-4" />
+                  <span>Secure checkout. Your payment information is encrypted.</span>
+                </div>
               </div>
             </aside>
           </div>
