@@ -1,8 +1,50 @@
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Calendar, MapPin, ArrowRight } from "lucide-react";
 import heroConcert from "@/assets/hero-concert.jpg";
+import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
+
+interface EventRow {
+  id: string;
+  title: string;
+  date: string;
+  venue: string;
+  price: string;
+  category: string;
+  image: string;
+}
 
 const HeroSection = () => {
+  const navigate = useNavigate();
+  const [featured, setFeatured] = useState<EventRow | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      const { data, error } = await supabase
+        .from("events")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (!mounted) return;
+
+      if (!error && data) {
+        setFeatured(data as EventRow);
+      }
+    })();
+
+    return () => { mounted = false; };
+  }, []);
+
+  const handleGetTickets = () => {
+    if (!featured) return;
+    const params = new URLSearchParams({ eventId: featured.id, qty: "1" });
+    navigate(`/checkout?${params.toString()}`);
+  };
+
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
       {/* Background Image */}
@@ -49,11 +91,11 @@ const HeroSection = () => {
           >
             <div className="flex items-center gap-2 text-muted-foreground">
               <Calendar className="h-5 w-5 text-primary" />
-              <span>Dec 28, 2025</span>
+              <span>{featured?.date ?? ""}</span>
             </div>
             <div className="flex items-center gap-2 text-muted-foreground">
               <MapPin className="h-5 w-5 text-primary" />
-              <span>Madison Square Garden, NYC</span>
+              <span>{featured?.venue ?? ""}</span>
             </div>
           </div>
 
@@ -61,13 +103,15 @@ const HeroSection = () => {
             className="flex flex-wrap gap-4 animate-fade-up"
             style={{ animationDelay: "0.5s" }}
           >
-            <Button variant="hero" size="xl">
+            <Button variant="hero" size="xl" onClick={handleGetTickets} disabled={!featured}>
               Get Tickets
               <ArrowRight className="h-5 w-5" />
             </Button>
-            <Button variant="glass" size="xl">
-              Browse All Events
-            </Button>
+            <a href="#events-section">
+              <Button variant="glass" size="xl">
+                Browse All Events
+              </Button>
+            </a>
           </div>
         </div>
       </div>
