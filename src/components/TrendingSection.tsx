@@ -93,44 +93,10 @@ const TrendingSection = () => {
           if (mounted) setItems(built);
           if (mounted) setLoading(false);
           return;
+
         }
 
-        // 2) Fallback: use favorites in the last 30 days
-        const monthStart = daysAgo(30).toISOString();
-        const { data: favs, error: favErr } = await supabase
-          .from("favorites")
-          .select("event_id, created_at")
-          .gte("created_at", monthStart);
-
-        if (!favErr && favs && favs.length > 0) {
-          const byEvent = new Map<string, number>();
-          const todayByEvent = new Map<string, number>();
-          for (const row of favs as { event_id: string; created_at: string }[]) {
-            byEvent.set(row.event_id, (byEvent.get(row.event_id) || 0) + 1);
-            if (row.created_at >= todayStart) {
-              todayByEvent.set(row.event_id, (todayByEvent.get(row.event_id) || 0) + 1);
-            }
-          }
-
-          const ids = Array.from(byEvent.keys());
-          const eventsMap = await fetchEventsByIds(ids);
-
-          const built: TrendingItem[] = ids
-            .filter((id) => !!eventsMap[id])
-            .map((id) => ({
-              event: eventsMap[id],
-              weekCount: byEvent.get(id) || 0, // treat month as weekCount fallback
-              todayCount: todayByEvent.get(id) || 0,
-            }))
-            .sort((a, b) => (b.todayCount || b.weekCount) - (a.todayCount || a.weekCount))
-            .slice(0, 4);
-
-          if (mounted) setItems(built);
-          if (mounted) setLoading(false);
-          return;
-        }
-
-        // 3) Final fallback: just show latest events
+        // 2) Final fallback: just show latest events
         const { data: latest, error: latestErr } = await supabase
           .from("events")
           .select("*")

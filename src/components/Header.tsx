@@ -1,6 +1,7 @@
 
 
-import { Search, Menu, User, Ticket, LogOut, Heart, X, ShoppingBag } from "lucide-react";
+
+import { Search, Menu, User, Ticket, LogOut, X, ShoppingBag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/useAuth";
@@ -80,13 +81,8 @@ const Header = () => {
                     <div className="px-2 py-1.5">
                       <p className="text-sm font-medium truncate">{user.email}</p>
                     </div>
+
                     <DropdownMenuSeparator />
-
-
-                    <DropdownMenuItem onClick={() => handleMobileNavigation('/favorites')}>
-                      <Heart className="h-4 w-4 mr-2" />
-                      My Favorites
-                    </DropdownMenuItem>
 
                     <DropdownMenuItem onClick={() => handleMobileNavigation('/orders')}>
                       <ShoppingBag className="h-4 w-4 mr-2" />
@@ -132,18 +128,9 @@ const Header = () => {
                   Home
                 </Button>
                 
+
                 {user ? (
                   <>
-                    <Button 
-                      variant="ghost" 
-                      className="justify-start h-12 text-lg"
-                      onClick={() => handleMobileNavigation('/favorites')}
-                    >
-                      <Heart className="h-5 w-5 mr-3" />
-                      My Favorites
-                    </Button>
-
-
                     <Button 
                       variant="ghost" 
                       className="justify-start h-12 text-lg"

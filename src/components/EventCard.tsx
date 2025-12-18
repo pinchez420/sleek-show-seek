@@ -1,11 +1,8 @@
 
-import { Calendar, MapPin, Heart } from "lucide-react";
+
+import { Calendar, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useFavorites } from "@/hooks/useFavorites";
-import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/hooks/useAuth";
-import { useToast } from "@/hooks/use-toast";
 
 interface EventCardProps {
   id: string;
@@ -17,44 +14,13 @@ interface EventCardProps {
   category: string;
 }
 
+
 const EventCard = ({ id, image, title, date, venue, price, category }: EventCardProps) => {
-  const { user } = useAuth();
-  const { toggleFavorite, isFavorite } = useFavorites();
-  const { toast } = useToast();
-  const favorited = isFavorite(id);
   const navigate = useNavigate();
 
   const handleBuy = () => {
     const params = new URLSearchParams({ eventId: id, qty: "1" });
     navigate(`/checkout?${params.toString()}`);
-  };
-
-  const handleToggleFavorite = async (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    console.log('Favorite button clicked:', { eventId: id, user: !!user });
-    
-    if (!user) {
-      toast({
-        title: "Sign in required",
-        description: "Please sign in to save favorite events",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    try {
-      await toggleFavorite(id);
-      console.log('Favorite toggle completed for:', id);
-    } catch (error) {
-      console.error('Error toggling favorite:', error);
-      toast({
-        title: "Error",
-        description: "Failed to update favorites. Please try again.",
-        variant: "destructive"
-      });
-    }
   };
 
   return (
@@ -68,31 +34,11 @@ const EventCard = ({ id, image, title, date, venue, price, category }: EventCard
         />
         <div className="absolute inset-0 bg-gradient-to-t from-card via-transparent to-transparent" />
         
+
         {/* Category Badge */}
         <span className="absolute top-3 left-3 px-3 py-1 rounded-full bg-primary/90 text-primary-foreground text-xs font-semibold">
           {category}
         </span>
-
-        {/* Favorite Button */}
-        <button 
-          type="button"
-          onClick={handleToggleFavorite}
-          className={cn(
-            "absolute top-3 right-3 p-2 rounded-full glass transition-all duration-300 hover:bg-primary/20 z-20",
-            "focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2",
-            favorited ? "opacity-100" : "opacity-70 group-hover:opacity-100"
-          )}
-          aria-label={favorited ? "Remove from favorites" : "Add to favorites"}
-        >
-          <Heart 
-            className={cn(
-              "h-4 w-4 transition-all duration-200",
-              favorited 
-                ? "text-primary fill-primary scale-110" 
-                : "text-white hover:text-primary"
-            )} 
-          />
-        </button>
       </div>
 
       {/* Content */}

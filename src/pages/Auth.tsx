@@ -112,9 +112,10 @@ const Auth = () => {
           <h2 className="text-2xl font-bold text-center mb-2">
             {isLogin ? 'Welcome back' : 'Create account'}
           </h2>
+
           <p className="text-muted-foreground text-center mb-8">
             {isLogin 
-              ? 'Sign in to access your favorite events' 
+              ? 'Sign in to access your account' 
               : 'Join us to discover amazing events'}
           </p>
 
