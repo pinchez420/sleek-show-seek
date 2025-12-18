@@ -63,7 +63,13 @@ const Header = () => {
         </div>
 
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" className="lg:hidden">
+
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="lg:hidden"
+            onClick={() => setMobileMenuOpen(true)}
+          >
             <Search className="h-5 w-5" />
           </Button>
           
@@ -114,10 +120,34 @@ const Header = () => {
                 <Menu className="h-5 w-5" />
               </Button>
             </SheetTrigger>
+
             <SheetContent side="right" className="w-[300px] sm:w-[400px]">
               <SheetHeader>
                 <SheetTitle>Menu</SheetTitle>
               </SheetHeader>
+              
+              {/* Mobile Search */}
+              <div className="mt-6">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search events, artists, venues..."
+                    className="pl-10 bg-secondary/50 border-border/50 focus:border-primary"
+                    defaultValue={searchParams.get('q') ?? ''}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        const value = (e.target as HTMLInputElement).value;
+                        const next = new URLSearchParams(searchParams);
+                        if (value) next.set('q', value); else next.delete('q');
+                        setSearchParams(next, { replace: false });
+                        navigate(`/?${next.toString()}`);
+                        setMobileMenuOpen(false);
+                      }
+                    }}
+                  />
+                </div>
+              </div>
+
               <div className="flex flex-col gap-4 mt-8">
                 <Button 
                   variant="ghost" 
